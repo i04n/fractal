@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fractal Tree - Simple Animation</title>
   <style>
     body {
       margin: 0;
@@ -11,6 +12,8 @@
       align-items: center;
       height: 100vh;
       background-color: #000;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
     }
   </style>
 </head>
@@ -18,9 +21,18 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 <script>
-// Pure magic :D
-  let angle;
-  let lengthFactor = 0.7;
+  const FRACTAL_CONFIG = {
+    baseLength: 150,
+    lengthFactor: 0.7,
+    minLength: 10,
+    baseAngle: Math.PI / 6,
+    angleVariation: Math.PI / 12,
+    animationSpeed: 0.02,
+    strokeWeightMin: 1,
+    strokeWeightMax: 8
+  };
+
+  let currentAngle = 0;
 
   function setup() {
     createCanvas(windowWidth, windowHeight);
@@ -29,25 +41,46 @@
 
   function draw() {
     background(0);
-    angle = PI / 6 + sin(frameCount * 0.02) * PI / 12;
-    translate(width / 2, height);
-    branch(150);
+    updateAnimation();
+    drawTree();
   }
 
-  function branch(len) {
-    strokeWeight(map(len, 2, 150, 1, 8));
-    line(0, 0, 0, -len);
-    translate(0, -len);
+  function updateAnimation() {
+    currentAngle = FRACTAL_CONFIG.baseAngle + 
+                  sin(frameCount * FRACTAL_CONFIG.animationSpeed) * FRACTAL_CONFIG.angleVariation;
+  }
 
-    if (len > 10) {
+  function drawTree() {
+    push();
+    translate(width / 2, height);
+    branch(FRACTAL_CONFIG.baseLength);
+    pop();
+  }
+
+  function branch(branchLength) {
+    const weight = map(
+      branchLength, 
+      FRACTAL_CONFIG.minLength, 
+      FRACTAL_CONFIG.baseLength, 
+      FRACTAL_CONFIG.strokeWeightMin, 
+      FRACTAL_CONFIG.strokeWeightMax
+    );
+    
+    strokeWeight(weight);
+    line(0, 0, 0, -branchLength);
+    translate(0, -branchLength);
+
+    if (branchLength > FRACTAL_CONFIG.minLength) {
+      const newLength = branchLength * FRACTAL_CONFIG.lengthFactor;
+      
       push();
-      rotate(angle);
-      branch(len * lengthFactor);
+      rotate(currentAngle);
+      branch(newLength);
       pop();
 
       push();
-      rotate(-angle);
-      branch(len * lengthFactor);
+      rotate(-currentAngle);
+      branch(newLength);
       pop();
     }
   }
